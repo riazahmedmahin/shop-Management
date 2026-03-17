@@ -391,6 +391,201 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
+// ============= PASSWORD RESET PAGE =============
+
+class PasswordResetPage extends StatefulWidget {
+  const PasswordResetPage({super.key});
+
+  @override
+  State<PasswordResetPage> createState() => _PasswordResetPageState();
+}
+
+class _PasswordResetPageState extends State<PasswordResetPage> {
+  final emailController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue[600],
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Reset Password',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              // Email Field
+              Text(
+                'Email Address',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Enter your email',
+                  hintText: 'example@email.com',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  prefixIcon: Icon(Icons.email, color: Colors.blue[600]),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.blue[600]!,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Send Reset Link Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[300],
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          final email = emailController.text.trim();
+
+                          if (email.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter your email'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() => _isLoading = true);
+
+                          try {
+                            await Supabase.instance.client.auth
+                                .resetPasswordForEmail(email);
+
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Password reset link sent to your email. Check your inbox!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Send Reset Link',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Back to Login Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Back to Login',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ---------------- Auth ----------------
 
 class LoginScreen extends StatefulWidget {
@@ -667,6 +862,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showPasswordResetDialog() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PasswordResetPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -675,7 +877,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 100),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 47),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -836,13 +1038,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Password recovery feature coming soon',
-                              ),
-                            ),
-                          );
+                          _showPasswordResetDialog();
                         },
                         child: Text(
                           'Forgot Password?',
@@ -958,6 +1154,51 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
+  int _currentStep = 0; // 0 = account info, 1 = business name, 2 = category, 3 = type
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Retail':
+        return Icons.store_outlined;
+      case 'Wholesale':
+        return Icons.local_shipping_outlined;
+      case 'Service':
+        return Icons.handyman_outlined;
+      case 'Manufacturing':
+        return Icons.precision_manufacturing_outlined;
+      case 'Technology':
+        return Icons.desktop_mac_outlined;
+      case 'Healthcare':
+        return Icons.local_hospital_outlined;
+      case 'Education':
+        return Icons.school_outlined;
+      case 'Finance':
+        return Icons.account_balance_outlined;
+      case 'Hospitality':
+        return Icons.hotel_outlined;
+      case 'Real Estate':
+        return Icons.apartment_outlined;
+      default:
+        return Icons.apps_outlined;
+    }
+  }
+
+  IconData _getTypeIcon(String type) {
+    switch (type) {
+      case 'Sole Proprietorship':
+        return Icons.person_outline;
+      case 'Partnership':
+        return Icons.people_outline;
+      case 'Limited Liability Company (LLC)':
+        return Icons.business_center_outlined;
+      case 'Corporation':
+        return Icons.business_outlined;
+      case 'Non-profit Organization':
+        return Icons.volunteer_activism_outlined;
+      default:
+        return Icons.business_outlined;
+    }
+  }
 
   final List<String> _categories = [
     'Retail',
@@ -983,119 +1224,166 @@ class _SignupScreenState extends State<SignupScreen> {
   ];
 
   Future<void> _signup() async {
-    if (_fullName.text.isEmpty ||
-        _email.text.isEmpty ||
-        _password.text.isEmpty ||
-        _confirmPassword.text.isEmpty ||
-        _businessName.text.isEmpty ||
-        _selectedCategory == null ||
-        _selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_password.text != _confirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_password.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must be at least 6 characters'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await Supabase.instance.client.auth.signUp(
-        email: _email.text.trim(),
-        password: _password.text,
-        data: {
-          'full_name': _fullName.text.trim(),
-          'business_name': _businessName.text.trim(),
-          'business_category': _selectedCategory,
-          'business_type': _selectedType,
-          'created_at': DateTime.now().toIso8601String(),
-        },
-      );
-
-      // Create business entry in database
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        try {
-          final response =
-              await Supabase.instance.client.from('businesses').insert({
-                'user_id': user.id,
-                'name': _businessName.text.trim(),
-                'category': _selectedCategory,
-                'type': _selectedType,
-              }).select();
-
-          if (response.isNotEmpty) {
-            final businessId = response[0]['id'];
-            // Update user metadata with active_business_id
-            await Supabase.instance.client.auth.updateUser(
-              UserAttributes(data: {'active_business_id': businessId}),
-            );
-          }
-        } catch (e) {
-          // Log error but continue - signup already succeeded
-          print('Error creating business: $e');
-        }
-      }
-
-      if (mounted) {
+    // Step 0: Validate account info
+    if (_currentStep == 0) {
+      if (_fullName.text.isEmpty ||
+          _email.text.isEmpty ||
+          _password.text.isEmpty ||
+          _confirmPassword.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Sign up successful! Please login now.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } on AuthException catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('An error occurred: $error'),
+            content: Text('Please fill in all fields'),
             backgroundColor: Colors.red,
           ),
         );
+        return;
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+
+      if (_password.text != _confirmPassword.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_password.text.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password must be at least 6 characters'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (!_agreeTerms) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please agree to the terms and conditions'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Move to step 1
+      setState(() => _currentStep = 1);
+      return;
+    }
+
+    // Step 1: Validate business name
+    if (_currentStep == 1) {
+      if (_businessName.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter business name'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      setState(() => _currentStep = 2);
+      return;
+    }
+
+    // Step 2: Validate business category
+    if (_currentStep == 2) {
+      if (_selectedCategory == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a business category'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      setState(() => _currentStep = 3);
+      return;
+    }
+
+    // Step 3: Validate business type and create account
+    if (_currentStep == 3) {
+      if (_selectedType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a business type'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      setState(() => _isLoading = true);
+
+      try {
+        await Supabase.instance.client.auth.signUp(
+          email: _email.text.trim(),
+          password: _password.text,
+          data: {
+            'full_name': _fullName.text.trim(),
+            'business_name': _businessName.text.trim(),
+            'business_category': _selectedCategory,
+            'business_type': _selectedType,
+            'created_at': DateTime.now().toIso8601String(),
+          },
+        );
+
+        // Create business entry in database
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          try {
+            final response =
+                await Supabase.instance.client.from('businesses').insert({
+                  'user_id': user.id,
+                  'name': _businessName.text.trim(),
+                  'category': _selectedCategory,
+                  'type': _selectedType,
+                }).select();
+
+            if (response.isNotEmpty) {
+              final businessId = response[0]['id'];
+              // Update user metadata with active_business_id
+              await Supabase.instance.client.auth.updateUser(
+                UserAttributes(data: {'active_business_id': businessId}),
+              );
+            }
+          } catch (e) {
+            // Log error but continue - signup already succeeded
+            print('Error creating business: $e');
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sign up successful! Please login now.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } on AuthException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('An error occurred: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -1113,7 +1401,13 @@ class _SignupScreenState extends State<SignupScreen> {
               children: [
                 // Back Button
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    if (_currentStep == 1) {
+                      setState(() => _currentStep = 0);
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -1125,17 +1419,41 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Header
-                const Text(
-                  'Create a New Account',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
+                // Header with Step Indicator
                 Text(
-                  'Start managing your business',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  _currentStep == 0
+                      ? 'Account Information'
+                      : _currentStep == 1
+                          ? 'Business Name'
+                          : _currentStep == 2
+                              ? 'Business Category'
+                              : 'Business Type',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Text(
+                    'Step ${_currentStep + 1} of 4',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+
+                // Step 1: Account Information
+                if (_currentStep == 0) ...[
 
                 // Full Name Field
                 Text(
@@ -1330,150 +1648,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-
-                // Business Name Field
-                Text(
-                  'Business Name',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _businessName,
-                  decoration: InputDecoration(
-                    hintText: 'Your Business Name',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.business, color: Colors.blue[600]),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.blue[600]!,
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Business Category Dropdown
-                Text(
-                  'Business Category',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  hint: const Text('Select a category'),
-                  items:
-                      _categories
-                          .map(
-                            (cat) =>
-                                DropdownMenuItem(value: cat, child: Text(cat)),
-                          )
-                          .toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedCategory = value);
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.category, color: Colors.blue[600]),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.blue[600]!,
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Business Type Dropdown
-                Text(
-                  'Business Type',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: _selectedType,
-                  hint: const Text('Select a business type'),
-                  items:
-                      _types
-                          .map(
-                            (type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedType = value);
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.apartment, color: Colors.blue[600]),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.blue[600]!,
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 24),
 
                 // Terms & Conditions
                 Row(
@@ -1517,7 +1692,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const TextSpan(text: ''),
                           ],
                         ),
                       ),
@@ -1526,83 +1700,307 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Sign Up Button
+                // Next Button (Step 1)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _signup,
+                    onPressed: _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[600],
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                    child: const Text(
+                      'Next',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Already have account link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[600],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                ],
+
+                // Step 2: Business Name
+                if (_currentStep == 1) ...[
+                  TextField(
+                    controller: _businessName,
+                    decoration: InputDecoration(
+                      hintText: 'Your Business Name',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      prefixIcon: Icon(Icons.business, color: Colors.blue[600]),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.blue[600]!,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Next Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _signup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Next',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Step 3: Business Category
+                if (_currentStep == 2) ...[
+                  const SizedBox(height: 16),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 2.2,
+                    children:
+                        _categories
+                            .map(
+                              (cat) => GestureDetector(
+                                onTap: () {
+                                  setState(() => _selectedCategory = cat);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[50],
+                                    border: Border.all(
+                                      color: _selectedCategory == cat
+                                          ? Colors.blue[600]!
+                                          : Colors.grey[300]!,
+                                      width:
+                                          _selectedCategory == cat ? 2.5 : 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _getCategoryIcon(cat),
+                                          color: Colors.blue[600],
+                                          size: 28,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            cat,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[800],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             )
-                            : const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            .toList(),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Or',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  // Next Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _signup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Next',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                  ),
+                ],
 
-                // Sign In Link
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                      children: [
-                        const TextSpan(text: 'Already have an account? '),
-                        TextSpan(
-                          text: 'Login',
-                          style: TextStyle(
-                            color: Colors.blue[600],
-                            fontWeight: FontWeight.bold,
-                          ),
-                          recognizer:
-                              TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.pop(context);
+                // Step 4: Business Type
+                if (_currentStep == 3) ...[
+                  const SizedBox(height: 16),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 2.2,
+                    children:
+                        _types
+                            .map(
+                              (type) => GestureDetector(
+                                onTap: () {
+                                  setState(() => _selectedType = type);
                                 },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[50],
+                                    border: Border.all(
+                                      color: _selectedType == type
+                                          ? Colors.blue[600]!
+                                          : Colors.grey[300]!,
+                                      width: _selectedType == type ? 2.5 : 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _getTypeIcon(type),
+                                          color: Colors.blue[600],
+                                          size: 28,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            type,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[800],
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Sign Up Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[600],
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+
+
+                ],
                 const SizedBox(height: 20),
               ],
             ),
@@ -2437,82 +2835,149 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
               title: const Text('Switch Business'),
               content: SizedBox(
                 width: double.maxFinite,
-                child: ListView.builder(
+                child: GridView.builder(
                   shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1,
+                  ),
                   itemCount: businesses.length,
                   itemBuilder: (context, index) {
                     final business = businesses[index];
                     final isActive = _activeBusinessId == business['id'];
 
-                    return Card(
-                      color: isActive ? Colors.blue[50] : null,
-                      child: ListTile(
-                        title: Text(
-                          business['name'],
-                          style: TextStyle(
-                            fontWeight:
-                                isActive ? FontWeight.bold : FontWeight.normal,
-                            color: isActive ? Colors.blue : null,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${business['type']} • ${business['category']}',
-                        ),
-                        // trailing:
-                        //     isActive
-                        //         ? const Icon(
-                        //           Icons.check_circle,
-                        //           color: Colors.blue,
-                        //         )
-                        //         : null,
-                        onTap:
-                            isActive
-                                ? null
-                                : () async {
-                                  try {
-                                    // Update active business
-                                    await Supabase.instance.client.auth
-                                        .updateUser(
-                                          UserAttributes(
-                                            data: {
-                                              'active_business_id':
-                                                  business['id'],
-                                              'business_name': business['name'],
-                                              'business_type': business['type'],
-                                              'business_category':
-                                                  business['category'],
-                                            },
-                                          ),
-                                        );
+                    return GestureDetector(
+                      onTap: isActive
+                          ? null
+                          : () async {
+                              try {
+                                // Update active business
+                                await Supabase.instance.client.auth
+                                    .updateUser(
+                                      UserAttributes(
+                                        data: {
+                                          'active_business_id': business['id'],
+                                          'business_name': business['name'],
+                                          'business_type': business['type'],
+                                          'business_category':
+                                              business['category'],
+                                        },
+                                      ),
+                                    );
 
-                                    if (mounted) {
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Switched to ${business['name']}',
-                                          ),
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Error switching business: $e',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Switched to ${business['name']}',
+                                      ),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error switching business: $e',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isActive ? Colors.blue[50] : Colors.grey[50],
+                          border: Border.all(
+                            color: isActive
+                                ? Colors.blue[600]!
+                                : Colors.grey[300]!,
+                            width: isActive ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.business_center,
+                                    size: 32,
+                                    color: isActive
+                                        ? Colors.blue[600]
+                                        : Colors.grey[600],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    business['name'],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: isActive
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                      fontSize: 13,
+                                      color: isActive
+                                          ? Colors.blue[600]
+                                          : Colors.grey[900],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '${business['type']}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    business['category'],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isActive)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[600],
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -2939,48 +3404,87 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
             child:
                 books.isEmpty
                     ? _EmptyBooksView(onAddFirstBook: _showAddBookDialog)
-                    : ListView.builder(
+                    : GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.8,
+                      ),
                       itemCount: books.length,
                       itemBuilder: (_, i) {
                         final b = books[i];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          child: ListTile(
-                            leading: const Icon(
-                              Icons.book_outlined,
-                              color: Colors.blueAccent,
+                        return GestureDetector(
+                          onTap: () => widget.onViewBookDetails(b),
+                          onLongPress: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (_) => Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.edit),
+                                    title: const Text('Rename'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _showRenameBookDialog(b);
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.delete),
+                                    title: const Text('Delete'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _showDeleteBookDialog(b);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            title: Text(b.name),
-                            subtitle: Text(
-                              'Created ${DateFormat('dd MMM yyyy').format(b.createdAt)} • Net ৳ ${b.netBalance.toStringAsFixed(2)}',
-                            ),
-                            onTap: () => widget.onViewBookDetails(b),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (v) {
-                                if (v == 'rename') _showRenameBookDialog(b);
-                                if (v == 'delete') _showDeleteBookDialog(b);
-                              },
-                              itemBuilder:
-                                  (_) => const [
-                                    PopupMenuItem(
-                                      value: 'rename',
-                                      child: ListTile(
-                                        leading: Icon(Icons.edit),
-                                        title: Text('Rename'),
-                                      ),
+                            elevation: 2,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.book_outlined,
+                                  size: 40,
+                                  color: Colors.blueAccent,
+                                ),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    b.name,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
                                     ),
-
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: ListTile(
-                                        leading: Icon(Icons.delete),
-                                        title: Text('Delete Book'),
-                                      ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    '৳ ${b.netBalance.toStringAsFixed(2)}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
                                     ),
-                                  ],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -3157,18 +3661,64 @@ class _SearchBooksPageState extends State<SearchBooksPage> {
       body:
           results.isEmpty
               ? const Center(child: Text('No books found'))
-              : ListView.builder(
+              : GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.8,
+                ),
                 itemCount: results.length,
                 itemBuilder: (_, i) {
                   final b = results[i];
-                  return ListTile(
-                    leading: const Icon(Icons.book_outlined),
-                    title: Text(b.name),
-                    subtitle: Text('Net ৳ ${b.netBalance.toStringAsFixed(2)}'),
+                  return GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
                       widget.onBookChosen(b);
                     },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.book_outlined,
+                            size: 40,
+                            color: Colors.blueAccent,
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              b.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              '৳ ${b.netBalance.toStringAsFixed(2)}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),
@@ -4744,234 +5294,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
-  void _editUserProfile() {
-    final nameController = TextEditingController(text: fullName);
-    final emailController = TextEditingController(text: userEmail);
-    final phoneController = TextEditingController(text: phone);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setSB) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Edit Your Profile',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Full Name Field
-                  Text(
-                    'Full Name',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      hintText: 'Enter your full name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.blue, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Email Field
-                  Text(
-                    'Email',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: emailController,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      hintText: 'Your email (cannot be changed)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Phone Field
-                  Text(
-                    'Mobile Number',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: 'Enter your mobile number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.blue, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Action Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            nameController.dispose();
-                            emailController.dispose();
-                            phoneController.dispose();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Cancel'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () async {
-                            final finalName = nameController.text.trim();
-                            final finalPhone = phoneController.text.trim();
-
-                            if (finalName.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Name cannot be empty'),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                              return;
-                            }
-
-                            try {
-                              final user = Supabase.instance.client.auth.currentUser;
-                              if (user == null) {
-                                throw Exception('User not found');
-                              }
-
-                              // Update user metadata
-                              await Supabase.instance.client.auth.updateUser(
-                                UserAttributes(
-                                  data: {
-                                    'full_name': finalName,
-                                    'phone': finalPhone,
-                                  },
-                                ),
-                              );
-
-                              if (mounted) {
-                                setState(() {
-                                  fullName = finalName;
-                                  phone = finalPhone;
-                                });
-
-                                nameController.dispose();
-                                emailController.dispose();
-                                phoneController.dispose();
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('✓ Profile updated successfully'),
-                                    backgroundColor: Colors.green,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Error: ${e.toString()}'),
-                                    backgroundColor: Colors.red,
-                                    duration: const Duration(seconds: 3),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: const Text('Save Changes'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _editBusinessProfile() {
     final businessTypeOptions = [
       'Sole Proprietorship',
@@ -5309,8 +5631,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Switch Business'),
               content: SizedBox(
                 width: double.maxFinite,
-                child: ListView.builder(
+                child: GridView.builder(
                   shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.2,
+                  ),
                   itemCount: businesses.length,
                   itemBuilder: (context, index) {
                     final business = businesses[index];
@@ -5319,200 +5647,198 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         business['id'];
 
                     return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: isActive
+                            ? const BorderSide(color: Colors.blue, width: 2)
+                            : BorderSide.none,
+                      ),
                       color: isActive ? Colors.blue[50] : null,
-                      child: ListTile(
-                        title: Text(
-                          business['name'],
-                          style: TextStyle(
-                            fontWeight:
-                                isActive ? FontWeight.bold : FontWeight.normal,
-                            color: isActive ? Colors.blue : null,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${business['type']} • ${business['category']}',
-                        ),
-                        trailing:
-                            isActive
-                                ? const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.blue,
-                                )
-                                : PopupMenuButton(
-                                  itemBuilder:
-                                      (context) => [
-                                        PopupMenuItem(
-                                          child: const Text('Delete'),
-                                          onTap: () async {
-                                            showDialog(
-                                              context: context,
-                                              builder:
-                                                  (_) => AlertDialog(
-                                                    title: const Text(
-                                                      'Delete Business',
-                                                    ),
-                                                    content: Text(
-                                                      'Are you sure you want to delete "${business['name']}"? All cashbooks and transactions will be deleted.',
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed:
-                                                            () => Navigator.pop(
-                                                              context,
-                                                            ),
-                                                        child: const Text(
-                                                          'Cancel',
-                                                        ),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () async {
-                                                          try {
-                                                            // Delete business (cascades to cashbooks and transactions)
-                                                            await Supabase
-                                                                .instance
-                                                                .client
-                                                                .from(
-                                                                  'businesses',
-                                                                )
-                                                                .delete()
-                                                                .eq(
-                                                                  'id',
-                                                                  business['id'],
-                                                                );
-
-                                                            if (mounted) {
-                                                              Navigator.pop(
-                                                                context,
-                                                              ); // Close delete dialog
-                                                              Navigator.pop(
-                                                                context,
-                                                              ); // Close switch business dialog
-                                                              ScaffoldMessenger.of(
-                                                                context,
-                                                              ).showSnackBar(
-                                                                SnackBar(
-                                                                  content: Text(
-                                                                    '${business['name']} deleted',
-                                                                  ),
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .red,
-                                                                ),
-                                                              );
-                                                              // Reload businesses list
-                                                              await Future.delayed(
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      500,
-                                                                ),
-                                                              );
-                                                              if (mounted) {
-                                                                await _switchBusiness();
-                                                              }
-                                                            }
-                                                          } catch (e) {
-                                                            if (mounted) {
-                                                              Navigator.pop(
-                                                                context,
-                                                              );
-                                                              ScaffoldMessenger.of(
-                                                                context,
-                                                              ).showSnackBar(
-                                                                SnackBar(
-                                                                  content: Text(
-                                                                    'Error deleting business: $e',
-                                                                  ),
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .red,
-                                                                ),
-                                                              );
-                                                            }
-                                                          }
-                                                        },
-                                                        child: const Text(
-                                                          'Delete',
-                                                          style: TextStyle(
-                                                            color: Colors.red,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.business_outlined,
+                                  size: 32,
+                                  color: isActive
+                                      ? Colors.blue
+                                      : Colors.grey,
                                 ),
-                        onTap:
-                            isActive
-                                ? null
-                                : () async {
-                                  try {
-                                    // Update active business
-                                    await Supabase.instance.client.auth
-                                        .updateUser(
-                                          UserAttributes(
-                                            data: {
-                                              'active_business_id':
-                                                  business['id'],
-                                              'business_name': business['name'],
-                                              'business_type': business['type'],
-                                              'business_category':
-                                                  business['category'],
-                                            },
+                                const SizedBox(height: 8),
+                                Text(
+                                  business['name'],
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: isActive ? Colors.blue : null,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  business['type'],
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  business['category'],
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isActive)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            )
+                          else
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (_) => AlertDialog(
+                                          title: const Text(
+                                            'Delete Business',
                                           ),
-                                        );
+                                          content: Text(
+                                            'Are you sure you want to delete "${business['name']}"? All cashbooks and transactions will be deleted.',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                  ),
+                                              child: const Text(
+                                                'Cancel',
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                try {
+                                                  // Delete business (cascades to cashbooks and transactions)
+                                                  await Supabase
+                                                      .instance
+                                                      .client
+                                                      .from(
+                                                        'businesses',
+                                                      )
+                                                      .delete()
+                                                      .eq(
+                                                        'id',
+                                                        business['id'],
+                                                      );
 
-                                    if (mounted) {
-                                      Navigator.pop(context);
-                                      _loadBusinessProfile();
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Switched to ${business['name']}',
-                                          ),
-                                          backgroundColor: Colors.green,
+                                                  if (mounted) {
+                                                    Navigator.pop(
+                                                      context,
+                                                    ); // Close delete dialog
+                                                    Navigator.pop(
+                                                      context,
+                                                    ); // Close switch business dialog
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          '${business['name']} deleted',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.red,
+                                                      ),
+                                                    );
+                                                    // Reload businesses list
+                                                    await Future.delayed(
+                                                      const Duration(
+                                                        milliseconds: 500,
+                                                      ),
+                                                    );
+                                                    if (mounted) {
+                                                      await _switchBusiness();
+                                                    }
+                                                  }
+                                                } catch (e) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error: $e',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              child: const Text(
+                                                'Delete',
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Error switching business: $e',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
+                                  );
                                 },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    color: Colors.red[700],
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     );
                   },
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
             ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading businesses: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -5690,8 +6016,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
