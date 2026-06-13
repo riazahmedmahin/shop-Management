@@ -25,11 +25,19 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late Stream<AuthState> _authStateStream;
+  bool _timerFinished = false;
 
   @override
   void initState() {
     super.initState();
     _authStateStream = Supabase.instance.client.auth.onAuthStateChange;
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _timerFinished = true;
+        });
+      }
+    });
   }
 
   @override
@@ -73,7 +81,8 @@ class _MyAppState extends State<MyApp> {
       home: StreamBuilder<AuthState>(
         stream: _authStateStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!_timerFinished ||
+              snapshot.connectionState == ConnectionState.waiting) {
             return const SplashScreen();
           }
 
