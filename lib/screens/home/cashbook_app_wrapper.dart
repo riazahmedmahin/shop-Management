@@ -566,7 +566,7 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
             activeBusinessCategory: _activeBusinessCategory,
             onSwitchBusiness: _showSwitchBusinessDialog,
           ),
-          const AnalyticsScreen(),
+          AnalyticsScreen(cashbooks: _cashbooks),
           const SettingsScreen(),
         ],
       ),
