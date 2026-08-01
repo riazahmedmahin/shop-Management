@@ -194,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: DropdownButtonFormField<String>(
-                              value: tempBusinessType,
+                              initialValue: tempBusinessType,
                               items:
                                   businessTypeOptions
                                       .map(
@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: DropdownButtonFormField<String>(
-                              value: tempBusinessCategory,
+                              initialValue: tempBusinessCategory,
                               items:
                                   businessCategoryOptions
                                       .map(
@@ -830,7 +830,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: selectedType,
+                          initialValue: selectedType,
                           items:
                               types
                                   .map(
@@ -847,7 +847,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: selectedCategory,
+                          initialValue: selectedCategory,
                           items:
                               categories
                                   .map(

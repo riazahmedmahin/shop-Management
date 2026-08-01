@@ -1,9 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
 import '../../models/business_setup_data.dart';
 import '../home/cashbook_app_wrapper.dart';
+import '../../utils/responsive_helper.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -259,12 +259,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final r = R(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: EdgeInsets.symmetric(horizontal: r.horizontalPadding, vertical: r.space(24)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -289,7 +290,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 24),
 
                 // Header with Step Indicator
-                Text(
+                  Text(
                   _currentStep == 0
                       ? 'Account Information'
                       : _currentStep == 1
@@ -297,9 +298,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           : _currentStep == 2
                               ? 'Business Category'
                               : 'Business Type',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: r.font(20), fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: r.space(12)),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -681,14 +682,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 // Step 3: Business Category
                 if (_currentStep == 2) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: r.space(16)),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 2.2,
+                    childAspectRatio: r.isSmall ? 2.8 : 2.2,
                     children:
                         _categories
                             .map(
@@ -768,14 +769,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 // Step 4: Business Type
                 if (_currentStep == 3) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: r.space(16)),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 2.2,
+                    childAspectRatio: r.isSmall ? 2.8 : 2.2,
                     children:
                         _types
                             .map(

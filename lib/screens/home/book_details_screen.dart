@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +9,7 @@ import '../../models/transaction.dart';
 import '../../models/cashbook.dart';
 import '../../utils/pdf_export_helper.dart';
 import '../../utils/csv_export_helper.dart';
+import '../../utils/responsive_helper.dart';
 
 class BookDetailsScreen extends StatefulWidget {
   final Cashbook cashbook;
@@ -421,47 +421,71 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                         return Card(
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 4,
+                            vertical: 6,
                           ),
-                          color: sel ? Colors.blue[50] : null,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: t.type == TransactionType.income
+                                  ? Colors.green.withValues(alpha: 0.3)
+                                  : Colors.red.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          color: sel ? Colors.blue[50] : Colors.white,
                           child: ListTile(
-                            leading:
-                                _isMulti
-                                    ? Checkbox(
-                                      value: sel,
-                                      onChanged:
-                                          (v) => setState(() {
-                                            v == true
-                                                ? _selectedIds.add(t.id)
-                                                : _selectedIds.remove(t.id);
-                                          }),
-                                    )
-                                    : null,
-                            title: Text(t.description),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_isMulti)
+                                  Checkbox(
+                                    value: sel,
+                                    onChanged: (v) => setState(() {
+                                      v == true
+                                          ? _selectedIds.add(t.id)
+                                          : _selectedIds.remove(t.id);
+                                    }),
+                                  ),
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: t.type == TransactionType.income
+                                        ? Colors.green.withValues(alpha: 0.1)
+                                        : Colors.red.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    t.type == TransactionType.income
+                                        ? Icons.arrow_downward
+                                        : Icons.arrow_upward,
+                                    color: t.type == TransactionType.income
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            title: Text(t.description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                             subtitle: Text(
-                              DateFormat(
-                                'MMMM dd yyyy\nhh:mm a',
-                              ).format(t.date),
+                              DateFormat('MMMM dd, yyyy • hh:mm a').format(t.date),
+                              style: const TextStyle(fontSize: 12),
                             ),
                             trailing: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '৳ ${t.amount.toStringAsFixed(2)}',
+                                  '৳ ${NumberFormat('#,##0.00').format(t.amount)}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 15,
                                     color:
                                         t.type == TransactionType.income
-                                            ? Colors.green
-                                            : Colors.red,
-                                  ),
-                                ),
-                                const Text(
-                                  'Final',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
+                                            ? Colors.green[700]
+                                            : Colors.red[700],
                                   ),
                                 ),
                               ],
@@ -488,7 +512,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.symmetric(
+              horizontal: R(context).horizontalPadding,
+              vertical: R(context).isSmall ? 10 : 16,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -499,7 +526,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      padding: EdgeInsets.symmetric(
+                        vertical: R(context).isSmall ? 12 : 15,
+                      ),
                     ),
                   ),
                 ),
@@ -512,7 +541,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      padding: EdgeInsets.symmetric(
+                        vertical: R(context).isSmall ? 12 : 15,
+                      ),
                     ),
                   ),
                 ),

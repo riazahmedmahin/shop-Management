@@ -3,11 +3,13 @@ import 'package:intl/intl.dart';
 import '../../models/cashbook.dart';
 import 'search_books_page.dart';
 import 'subscription_screen.dart';
+import '../../utils/responsive_helper.dart';
 
 enum SortOption { lastUpdated, nameAZ, netHighLow, netLowHigh, lastCreated }
 
 class CashbooksScreen extends StatefulWidget {
   final List<Cashbook> cashbooks;
+  final bool isLoading;
   final Function(String) onAddCashbook;
   final Function(String, String) onRenameCashbook;
   final Function(String) onDeleteCashbook;
@@ -21,6 +23,7 @@ class CashbooksScreen extends StatefulWidget {
   const CashbooksScreen({
     super.key,
     required this.cashbooks,
+    this.isLoading = false,
     required this.onAddCashbook,
     required this.onRenameCashbook,
     required this.onDeleteCashbook,
@@ -289,7 +292,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
         children: [
           // Swipeable banners
           SizedBox(
-            height: 178,
+            height: R(context).bannerHeight,
             child: PageView(
               controller: _banner,
               children: [
@@ -354,8 +357,11 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
             ),
           ),
           Expanded(
-            child:
-                books.isEmpty
+            child: widget.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : books.isEmpty
                     ? _EmptyBooksView(onAddFirstBook: _showAddBookDialog)
                     : ListView.builder(
                       padding: const EdgeInsets.symmetric(
@@ -417,13 +423,15 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.1),
+                                      color: b.netBalance >= 0 
+                                          ? Colors.green.withValues(alpha: 0.1)
+                                          : Colors.red.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Icon(
-                                      Icons.book_outlined,
+                                    child: Icon(
+                                      Icons.menu_book_rounded,
                                       size: 28,
-                                      color: Colors.blueAccent,
+                                      color: b.netBalance >= 0 ? Colors.green[600] : Colors.red[600],
                                     ),
                                   ),
                                   const SizedBox(width: 14),
@@ -462,14 +470,23 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            '৳ ${b.netBalance.toStringAsFixed(2)}',
+                                            'Net Balance',
                                             style: TextStyle(
-                                              fontSize: 15,
+                                              fontSize: 11,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            b.netBalance >= 0
+                                                ? '৳ ${NumberFormat('#,##0.00').format(b.netBalance)}'
+                                                : '- ৳ ${NumberFormat('#,##0.00').format(b.netBalance.abs())}',
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color:
-                                                  b.netBalance >= 0
-                                                      ? Colors.green[700]
-                                                      : Colors.red[700],
+                                              color: b.netBalance >= 0
+                                                  ? Colors.green[700]
+                                                  : Colors.red[700],
+                                              fontSize: 14,
                                             ),
                                           ),
                                         ],
@@ -556,10 +573,24 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Card(
-        color: color,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [color, color.withValues(alpha: 0.6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Expanded(
@@ -571,18 +602,19 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                       title,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const Spacer(),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
@@ -596,16 +628,21 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                         backgroundColor: Colors.white,
                         foregroundColor: color,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                          horizontal: 16,
+                          vertical: 10,
                         ),
-                        minimumSize: const Size(100, 36),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
                       ),
-                      child: const Text('Subscribe'),
+                      child: const Text('Subscribe Now', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 16),
+              Icon(Icons.workspace_premium, size: 64, color: Colors.white.withValues(alpha: 0.2)),
             ],
           ),
         ),

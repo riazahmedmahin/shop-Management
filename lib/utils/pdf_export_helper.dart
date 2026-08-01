@@ -428,7 +428,7 @@ Future<Uint8List> buildPdfBytes(Map<String, dynamic> payload) async {
                     ),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
         ];

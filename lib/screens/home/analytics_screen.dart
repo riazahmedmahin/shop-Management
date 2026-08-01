@@ -8,6 +8,7 @@ import '../../models/transaction.dart';
 import '../../models/cashbook.dart';
 import '../../utils/pdf_export_helper.dart';
 import '../../utils/csv_export_helper.dart';
+import '../../utils/responsive_helper.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final List<Cashbook> cashbooks;
@@ -441,7 +442,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             ),
             const SizedBox(height: 20),
             if (!hasData)
-              Container(
+              SizedBox(
                 height: 150,
                 child: const Center(
                   child: Text(
@@ -451,8 +452,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 ),
               )
             else
-              Container(
-                height: 160,
+              SizedBox(
+                height: R(context).barChartHeight,
                 child: Row(
                   children: [
                     // Y-Axis labels
@@ -524,7 +525,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             ),
             const SizedBox(height: 20),
             if (total == 0)
-              Container(
+              SizedBox(
                 height: 150,
                 child: const Center(
                   child: Text(
@@ -544,12 +545,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       duration: const Duration(milliseconds: 800),
                       curve: Curves.fastOutSlowIn,
                       builder: (context, value, child) {
+                        final donutSize = R(context).donutSize;
                         return Stack(
                           alignment: Alignment.center,
                           children: [
                             SizedBox(
-                              width: 120,
-                              height: 120,
+                              width: donutSize,
+                              height: donutSize,
                               child: CustomPaint(
                                 painter: DonutChartPainter(
                                   income: totalIn,

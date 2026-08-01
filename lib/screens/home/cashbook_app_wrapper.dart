@@ -16,6 +16,7 @@ class CashbookAppWrapper extends StatefulWidget {
 class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
   int _tab = 0;
   final List<Cashbook> _cashbooks = [];
+  bool _isLoading = true;
   Cashbook? _current;
   String? _activeBusinessId;
   String _activeBusinessName = 'My Business';
@@ -56,11 +57,20 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
           _activeBusinessType = metadata['business_type'] ?? '';
           _activeBusinessCategory = metadata['business_category'] ?? '';
         });
+        await _loadBooksFromDatabase();
       }
+    } else {
+      await _loadBooksFromDatabase();
     }
   }
 
   Future<void> _loadBooksFromDatabase() async {
+    if (_cashbooks.isEmpty) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) return;
@@ -141,6 +151,12 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading books: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -556,6 +572,7 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
         children: [
           CashbooksScreen(
             cashbooks: _cashbooks,
+            isLoading: _isLoading,
             onAddCashbook: _addBook,
             onRenameCashbook: _renameBook,
             onDeleteCashbook: _deleteBook,

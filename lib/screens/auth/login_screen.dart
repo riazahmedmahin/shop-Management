@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'password_reset_screen.dart';
 import 'signup_screen.dart';
+import '../../utils/responsive_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -84,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: selectedType,
+                          initialValue: selectedType,
                           items:
                               _types
                                   .map(
@@ -101,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: selectedCategory,
+                          initialValue: selectedCategory,
                           items:
                               _categories
                                   .map(
@@ -287,13 +288,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final r = R(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 47),
+              padding: EdgeInsets.symmetric(horizontal: r.horizontalPadding, vertical: r.authTopPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -302,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(r.isSmall ? 12 : 16),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [Colors.blue[600]!, Colors.blue[400]!],
@@ -311,43 +313,43 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.currency_exchange,
-                            size: 48,
+                            size: r.icon(44),
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
+                        SizedBox(height: r.space(12)),
+                        Text(
                           'CASHBOOK',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: r.font(26),
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: r.space(6)),
                         Text(
                           'Smart accounting system for your business',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: r.font(13), color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  SizedBox(height: r.space(32)),
 
                   // Welcome Text
-                  const Text(
+                  Text(
                     'Login',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: r.font(22), fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: r.space(6)),
                   Text(
                     'Sign in to your account',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: r.font(13), color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: r.space(22)),
 
                   // Email Field
                   Text(
@@ -473,7 +475,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         backgroundColor: Colors.blue[600],
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: Colors.grey[300],
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: EdgeInsets.symmetric(vertical: r.btnPadding),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
