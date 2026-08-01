@@ -114,21 +114,19 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
       for (var bookData in (booksData as List)) {
         final bookId = bookData['id'] as String;
         final txsForBook = txByBook[bookId] ?? [];
-        final transactions =
-            txsForBook
-                .map(
-                  (tx) => Transaction(
-                    id: tx['id'],
-                    description: tx['description'] ?? '',
-                    amount: (tx['amount'] as num).toDouble(),
-                    date: DateTime.parse(tx['date']),
-                    type:
-                        tx['type'] == 'income'
-                            ? TransactionType.income
-                            : TransactionType.expense,
-                  ),
-                )
-                .toList();
+        final transactions = txsForBook
+            .map(
+              (tx) => Transaction(
+                id: tx['id'],
+                description: tx['description'] ?? '',
+                amount: (tx['amount'] as num).toDouble(),
+                date: DateTime.parse(tx['date']),
+                type: tx['type'] == 'income'
+                    ? TransactionType.income
+                    : TransactionType.expense,
+              ),
+            )
+            .toList();
 
         final book = Cashbook(
           id: bookId,
@@ -166,13 +164,12 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) return;
 
-      final response =
-          await Supabase.instance.client.from('cashbooks').insert({
-            'user_id': userId,
-            'name': name,
-            'business_id': _activeBusinessId,
-            'created_at': DateTime.now().toIso8601String(),
-          }).select();
+      final response = await Supabase.instance.client.from('cashbooks').insert({
+        'user_id': userId,
+        'name': name,
+        'business_id': _activeBusinessId,
+        'created_at': DateTime.now().toIso8601String(),
+      }).select();
 
       if (response.isNotEmpty) {
         final newBook = Cashbook(
@@ -202,13 +199,10 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
 
   Future<void> _renameBook(String id, String name) async {
     try {
-      await Supabase.instance.client
-          .from('cashbooks')
-          .update({
-            'name': name,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', id);
+      await Supabase.instance.client.from('cashbooks').update({
+        'name': name,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', id);
 
       setState(() {
         final i = _cashbooks.indexWhere((b) => b.id == id);
@@ -257,13 +251,12 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => BookDetailsScreen(
-              cashbook: b,
-              onAddTransaction: _addTx,
-              onUpdateTransaction: _updateTx,
-              onDeleteTransactions: _deleteTxs,
-            ),
+        builder: (_) => BookDetailsScreen(
+          cashbook: b,
+          onAddTransaction: _addTx,
+          onUpdateTransaction: _updateTx,
+          onDeleteTransactions: _deleteTxs,
+        ),
       ),
     ).then((_) {
       // Refresh book when coming back
@@ -275,12 +268,12 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
     try {
       final response =
           await Supabase.instance.client.from('transactions').insert({
-            'cashbook_id': _current!.id,
-            'description': t.description,
-            'amount': t.amount,
-            'type': t.type == TransactionType.income ? 'income' : 'expense',
-            'date': t.date.toIso8601String(),
-          }).select();
+        'cashbook_id': _current!.id,
+        'description': t.description,
+        'amount': t.amount,
+        'type': t.type == TransactionType.income ? 'income' : 'expense',
+        'date': t.date.toIso8601String(),
+      }).select();
 
       if (response.isNotEmpty) {
         final dbId = response[0]['id'];
@@ -312,16 +305,13 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
 
   Future<void> _updateTx(Transaction t) async {
     try {
-      await Supabase.instance.client
-          .from('transactions')
-          .update({
-            'description': t.description,
-            'amount': t.amount,
-            'type': t.type == TransactionType.income ? 'income' : 'expense',
-            'date': t.date.toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', t.id);
+      await Supabase.instance.client.from('transactions').update({
+        'description': t.description,
+        'amount': t.amount,
+        'type': t.type == TransactionType.income ? 'income' : 'expense',
+        'date': t.date.toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', t.id);
 
       setState(() {
         final idx =
@@ -391,166 +381,161 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
       // Show dialog with business list
       await showDialog(
         context: context,
-        builder:
-            (_) => AlertDialog(
-              title: const Text('Switch Business'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: businesses.length,
-                  itemBuilder: (context, index) {
-                    final business = businesses[index];
-                    final isActive = _activeBusinessId == business['id'];
+        builder: (_) => AlertDialog(
+          title: const Text('Switch Business'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1,
+              ),
+              itemCount: businesses.length,
+              itemBuilder: (context, index) {
+                final business = businesses[index];
+                final isActive = _activeBusinessId == business['id'];
 
-                    return GestureDetector(
-                      onTap: isActive
-                          ? null
-                          : () async {
-                              try {
-                                // Update active business
-                                await Supabase.instance.client.auth
-                                    .updateUser(
-                                      UserAttributes(
-                                        data: {
-                                          'active_business_id': business['id'],
-                                          'business_name': business['name'],
-                                          'business_type': business['type'],
-                                          'business_category':
-                                              business['category'],
-                                        },
-                                      ),
-                                    );
-
-                                if (mounted) {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Switched to ${business['name']}',
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Error switching business: $e',
-                                      ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isActive ? Colors.blue[50] : Colors.grey[50],
-                          border: Border.all(
-                            color: isActive
-                                ? Colors.blue[600]!
-                                : Colors.grey[300]!,
-                            width: isActive ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.business_center,
-                                    size: 32,
-                                    color: isActive
-                                        ? Colors.blue[600]
-                                        : Colors.grey[600],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    business['name'],
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontWeight: isActive
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                      fontSize: 13,
-                                      color: isActive
-                                          ? Colors.blue[600]
-                                          : Colors.grey[900],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '${business['type']}',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    business['category'],
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[500],
-                                    ),
-                                  ),
-                                ],
+                return GestureDetector(
+                  onTap: isActive
+                      ? null
+                      : () async {
+                          try {
+                            // Update active business
+                            await Supabase.instance.client.auth.updateUser(
+                              UserAttributes(
+                                data: {
+                                  'active_business_id': business['id'],
+                                  'business_name': business['name'],
+                                  'business_type': business['type'],
+                                  'business_category': business['category'],
+                                },
                               ),
-                            ),
-                            if (isActive)
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[600],
-                                    shape: BoxShape.circle,
+                            );
+
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Switched to ${business['name']}',
                                   ),
-                                  child: const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 16,
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Error switching business: $e',
                                   ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isActive ? Colors.blue[50] : Colors.grey[50],
+                      border: Border.all(
+                        color: isActive ? Colors.blue[600]! : Colors.grey[300]!,
+                        width: isActive ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.business_center,
+                                size: 32,
+                                color: isActive
+                                    ? Colors.blue[600]
+                                    : Colors.grey[600],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                business['name'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: isActive
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                  fontSize: 13,
+                                  color: isActive
+                                      ? Colors.blue[600]
+                                      : Colors.grey[900],
                                 ),
                               ),
-                          ],
+                              const SizedBox(height: 6),
+                              Text(
+                                '${business['type']}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                business['category'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
+                        if (isActive)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[600],
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
       );
     } catch (e) {
       if (mounted) {

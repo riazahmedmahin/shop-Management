@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/auth/app_lock_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/cashbook_app_wrapper.dart';
@@ -94,7 +95,7 @@ class _MyAppState extends State<MyApp> {
 
             final session = snapshot.data?.session;
             if (session != null) {
-              return const CashbookAppWrapper();
+              return const AppLockScreen(child: CashbookAppWrapper());
             } else {
               return const LoginScreen();
             }
