@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -230,6 +231,104 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryPieChartSection(List<Transaction> txs) {
+    // Only count expenses for category breakdown (or income if you prefer, but usually expense is what matters for breakdown)
+    final expenseTxs = txs.where((t) => t.type == TransactionType.expense).toList();
+    if (expenseTxs.isEmpty) return const SizedBox();
+
+    final Map<String, double> categoryTotals = {};
+    for (var t in expenseTxs) {
+      final cat = t.category;
+      categoryTotals[cat] = (categoryTotals[cat] ?? 0) + t.amount;
+    }
+
+    final totalExpense = expenseTxs.fold(0.0, (s, t) => s + t.amount);
+    
+    // Define a nice color palette for categories
+    final List<Color> colors = [
+      Colors.blue[400]!,
+      Colors.orange[400]!,
+      Colors.purple[400]!,
+      Colors.red[400]!,
+      Colors.teal[400]!,
+      Colors.indigo[400]!,
+      Colors.pink[400]!,
+      Colors.grey[400]!,
+    ];
+
+    int colorIndex = 0;
+    final pieSections = categoryTotals.entries.map((e) {
+      final color = colors[colorIndex % colors.length];
+      colorIndex++;
+      final percentage = (e.value / totalExpense) * 100;
+      return PieChartSectionData(
+        color: color,
+        value: e.value,
+        title: '${percentage.toStringAsFixed(0)}%',
+        radius: 40,
+        titleStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      );
+    }).toList();
+
+    colorIndex = 0;
+    final legendItems = categoryTotals.entries.map((e) {
+      final color = colors[colorIndex % colors.length];
+      colorIndex++;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6.0),
+        child: _buildLegendItem(e.key, color, '৳ ${e.value.toStringAsFixed(0)}'),
+      );
+    }).toList();
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Expense Category Breakdown',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: SizedBox(
+                    height: R(context).donutSize,
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: R(context).donutSize / 3,
+                        sections: pieSections,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: legendItems,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -985,7 +1084,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             // Active Chart Render
             _showBarChart
                 ? _buildBarChartSection(stats)
-                : _buildDonutChartSection(totalIn, totalOut),
+                : Column(
+                    children: [
+                      _buildDonutChartSection(totalIn, totalOut),
+                      _buildCategoryPieChartSection(txs),
+                    ],
+                  ),
 
             // Tap detailed breakdown card
             if (_showBarChart && activeBarData != null)

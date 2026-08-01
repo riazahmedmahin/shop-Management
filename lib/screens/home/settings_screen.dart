@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import '../auth/login_screen.dart';
+import 'subscription_screen.dart';
+import 'team_management_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -1051,6 +1056,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Icons.group_rounded,
                     'Business Team',
                     'Add, remove or change role',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TeamManagementScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _item(
                     context,

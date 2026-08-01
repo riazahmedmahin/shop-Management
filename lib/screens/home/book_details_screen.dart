@@ -38,6 +38,16 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   bool _isMulti = false;
   final Set<String> _selectedIds = {};
 
+  final List<String> _categories = [
+    'Food',
+    'Transport',
+    'Salary',
+    'Bills',
+    'Shopping',
+    'Business',
+    'Other'
+  ];
+
   List<Transaction> get _filtered {
     List<Transaction> f = widget.cashbook.transactions;
     if (_searchQuery.isNotEmpty) {
@@ -725,6 +735,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     final remark = TextEditingController();
     DateTime date = DateTime.now();
     final idGen = const Uuid();
+    String selectedCategory = 'Other';
 
     showModalBottomSheet(
       context: context,
@@ -799,6 +810,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                         controller: remark,
                         decoration: const InputDecoration(labelText: 'Remark'),
                       ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategory,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        items: _categories.map((c) {
+                          return DropdownMenuItem(value: c, child: Text(c));
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setSB(() => selectedCategory = val);
+                        },
+                      ),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -824,6 +846,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                               amount: a,
                               date: date,
                               type: type,
+                              category: selectedCategory,
                             );
                             await widget.onAddTransaction(tx);
                             FocusManager.instance.primaryFocus?.unfocus();
@@ -849,6 +872,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     final remark = TextEditingController(text: t.description);
     DateTime date = t.date;
     TransactionType type = t.type;
+    String selectedCategory = t.category;
 
     showModalBottomSheet(
       context: context,
@@ -923,6 +947,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                           labelText: 'Description',
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategory,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        items: _categories.map((c) {
+                          return DropdownMenuItem(value: c, child: Text(c));
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setSB(() => selectedCategory = val);
+                        },
+                      ),
                       const SizedBox(height: 10),
                       Column(
                         children: [
@@ -965,6 +1000,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                               amount: a,
                               date: date,
                               type: type,
+                              category: selectedCategory,
                             );
                             await widget.onUpdateTransaction(updated);
                             FocusManager.instance.primaryFocus?.unfocus();

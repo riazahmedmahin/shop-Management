@@ -78,8 +78,7 @@ class _CashbookAppWrapperState extends State<CashbookAppWrapper> {
       // Load cashbooks - filter by active business if set
       var query = Supabase.instance.client
           .from('cashbooks')
-          .select()
-          .eq('user_id', userId);
+          .select();
 
       // Add business_id filter if active business is set
       if (_activeBusinessId != null) {

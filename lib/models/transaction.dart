@@ -6,6 +6,7 @@ class Transaction {
   double amount;
   DateTime date;
   TransactionType type;
+  String category;
 
   Transaction({
     required this.id,
@@ -13,5 +14,6 @@ class Transaction {
     required this.amount,
     required this.date,
     required this.type,
+    this.category = 'Other',
   });
 }
